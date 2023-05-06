@@ -6,6 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 
@@ -15,82 +16,82 @@ class Fraction {
 
 private:
 
-    Fraction();
-
-    Fraction(const float f);
-
     int numerator;
     int denominator;
 
 public:
 
-    static Fraction floatToFraction(float x);
+    Fraction();
+
+    Fraction(float fraction);
 
     Fraction(int numerator, int denominator);
 
-    friend std::ostream &operator<<(std::ostream &out, const Fraction &c);
+    static Fraction floatToFraction(float value);
 
-    friend std::istream &operator>>(std::istream &in, Fraction &c);
+    friend std::ostream &operator<<(std::ostream &outstream, const Fraction &fraction);
+
+    friend std::istream &operator>>(std::istream &instream, Fraction &fraction);
 
     Fraction operator+(const Fraction &other) const;
 
     Fraction operator+(float other) const;
 
-    friend Fraction operator+(float value, const Fraction &f);
+    friend Fraction operator+(float value, const Fraction &fraction);
 
     Fraction operator-(const Fraction &other) const;
 
     Fraction operator-(float other) const;
 
-    friend Fraction operator-(float value, const Fraction &f);
+    friend Fraction operator-(float value, const Fraction &fraction);
 
     Fraction operator/(const Fraction &other) const;
 
     Fraction operator/(float other) const;
 
-    friend Fraction operator/(float value, const Fraction &f);
+    friend Fraction operator/(float value, const Fraction &fraction);
 
     Fraction operator*(const Fraction &other) const;
 
     Fraction operator*(float other) const;
 
-    friend Fraction operator*(float value, const Fraction &f);
+    friend Fraction operator*(float value, const Fraction &fraction);
 
     bool operator==(const Fraction &other) const;
 
     bool operator==(float other) const;
 
-    friend bool operator==(float value, const Fraction &f);
+    friend bool operator==(float value, const Fraction &fraction);
 
     bool operator!=(const Fraction &other) const;
 
     bool operator!=(float other) const;
 
-    friend bool operator!=(float value, const Fraction &f);
+    friend bool operator!=(float value, const Fraction &fraction);
 
     bool operator>(const Fraction &other) const;
 
     bool operator>(float other) const;
 
-    friend bool operator>(float value, const Fraction &f);
+    friend bool operator>(float value, const Fraction &fraction);
 
     bool operator<(const Fraction &other) const;
 
     bool operator<(float other) const;
 
-    friend bool operator<(float value, const Fraction &f);
+    friend bool operator<(float value, const Fraction &fraction);
 
     bool operator>=(const Fraction &other) const;
 
     bool operator>=(float other) const;
 
-    friend bool operator>=(float value, const Fraction &f);
+    friend bool operator>=(float value, const Fraction &fraction);
 
     bool operator<=(const Fraction &other) const;
 
     bool operator<=(float other) const;
 
-    friend bool operator<=(float value, const Fraction &f);
+    friend bool operator<=(float value, const Fraction &fraction);
 
     Fraction& operator++();
 
@@ -106,6 +107,12 @@ public:
 
     [[nodiscard]] int lcm(const Fraction &other) const;
 };
+
+    int add_ints(int first, int second);
+
+    int sub_ints(int first, int second);
+
+    int mul_ints(int first, int second);
 
 
 #endif

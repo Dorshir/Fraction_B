@@ -13,6 +13,36 @@ int Fraction::lcm(const Fraction &other) const {
     return lcm;
 }
 
+int add_ints(int a, int b) {
+    if (a > 0 && b > std::numeric_limits<int>::max() - a) {
+        throw std::overflow_error("Integer overflow");
+    }
+    if (a < 0 && b < std::numeric_limits<int>::min() - a) {
+        throw std::overflow_error("Integer underflow");
+    }
+    return a + b;
+}
+
+int sub_ints(int a, int b) {
+if (b < 0 && a > std::numeric_limits<int>::max() + b) {
+        throw std::overflow_error("Integer overflow");
+    }
+    if (b > 0 && a < std::numeric_limits<int>::min() + b) {
+        throw std::overflow_error("Integer underflow");
+    }
+    return a - b;
+}
+
+int mul_ints(int a, int b) {
+
+    if (a > 0 && b > 0 && a > std::numeric_limits<int>::max() / b) {
+        throw std::overflow_error("Integer overflow");
+    }
+    if (a < 0 && b < 0 && a < std::numeric_limits<int>::max() / b) {
+        throw std::overflow_error("Integer overflow");}
+    return a * b;  
+}
+
 Fraction::Fraction(int n, int d) {
     if (d < 0) {
         d = d * (-1);
@@ -20,12 +50,14 @@ Fraction::Fraction(int n, int d) {
     } else if (d == 0) {
         throw invalid_argument("0");
     }
+
+    int sign = n*d < 0 ? -1 : 1;
     int gcd = __gcd(n, d);
-    numerator = n / gcd;
-    denominator = d / gcd;
+    numerator = abs(n / gcd) * sign;
+    denominator = abs(d / gcd);
 }
 
-Fraction::Fraction(const float f){
+Fraction::Fraction(float f){
     Fraction temp = floatToFraction(f);
     numerator = temp.getNumerator();
     denominator = temp.getDenominator();
@@ -45,55 +77,83 @@ int Fraction::getDenominator() const {
 }
 
 std::ostream &operator<<(std::ostream &out, const Fraction &c) {
-    out << c.getNumerator() << '/' << c.getDenominator() << endl;
-    return out;
+    return out << c.getNumerator() << '/' << c.getDenominator();
 }
 
 std::istream &operator>>(std::istream &in, Fraction &fraction) {
     string input;
-    if (getline(in, input, '/')) {
-        fraction.numerator = std::stoi(input);
-        if (getline(in, input)) {
-            fraction.denominator = stoi(input);
-        } else {
-            fraction.denominator = 1;
+    char c;
+
+    // Read numerator
+    while (in.get(c)) {
+        if (c == '/' || c == ' ' || c == ',') {
+            break;
         }
+        if(c == '.') throw runtime_error("Invalid argument, cannot initialize float as numerator.");
+        input += c;
     }
+    try {
+    fraction.numerator = std::stoi(input);
+} catch (const std::invalid_argument& e) {
+    throw std::runtime_error("Invalid argument, numerator is not a valid integer.");
+}
+
+    // Read denominator
+    input = "";
+    while (in.get(c)) {
+        if (c == '\n' || c == '\r' || c == ' ') {
+            break;
+        }
+        if(c == '.') throw runtime_error("Invalid argument, cannot initialize float as denominator.");
+        input += c;
+    }
+    if(input == "0") throw runtime_error("Denominator initialize by 0 is not defined.");
+    if(input == "") throw invalid_argument("One number only.");
+    fraction.denominator = stoi(input);
+    
+    int sign = fraction.numerator * fraction.denominator < 0 ? -1 : 1;
+    fraction.numerator = abs(fraction.numerator) * sign;
+    fraction.denominator = abs(fraction.denominator);
     return in;
 }
 
 Fraction Fraction::operator+(const Fraction &other) const {
 
-    int LCM = lcm(other);
-    int sum_num = numerator + other.getNumerator();
-    int gcd = __gcd(sum_num, LCM);
-    sum_num /= gcd;
-    return {sum_num, LCM};
+    int lcm = (denominator * other.getDenominator()) / __gcd(denominator, other.getDenominator());
+
+    int new_num1 = numerator * (lcm / denominator);
+    int new_num2 = other.getNumerator() * (lcm / other.getDenominator());
+
+    int result_num = add_ints(new_num1,new_num2);
+
+    return {result_num, lcm};
 }
 
 Fraction Fraction::operator-(const Fraction &other) const {
 
-    int LCM = lcm(other);
+    int lcm = (denominator * other.getDenominator()) / __gcd(denominator, other.getDenominator());
 
-    int new_num1 = numerator * (LCM / denominator);
-    int new_num2 = other.getNumerator() * (LCM / other.getDenominator());
+    int new_num1 = numerator * (lcm / denominator);
+    int new_num2 = other.getNumerator() * (lcm / other.getDenominator());
 
-    int result_num = new_num1 - new_num2;
+    int result_num = sub_ints(new_num1,new_num2);
 
-    return {result_num, LCM};
+    return {result_num, lcm};
 }
 
 Fraction Fraction::operator/(const Fraction &other) const {
-    return {numerator * other.getDenominator(), denominator * other.getNumerator()};
+    if(other == 0) throw runtime_error("Division by 0 is not defined.");
+    return {mul_ints(numerator,other.getDenominator()), mul_ints(denominator, other.getNumerator())};
 }
 
 Fraction Fraction::operator*(const Fraction &other) const {
-    return {numerator * other.getNumerator(), denominator * other.getDenominator()};
+
+    return {mul_ints(numerator, other.getNumerator()), mul_ints(denominator,other.getDenominator())};
 }
 
 bool Fraction::operator==(const Fraction &other) const {
 
-    if (numerator == other.getNumerator() && denominator == other.getDenominator()) return true;
+    if ((numerator == other.getNumerator() && denominator == other.getDenominator()) || ((*this).numerator == 0 && other.getNumerator() == 0)) return true;
     return false;
 }
 
@@ -131,9 +191,14 @@ bool Fraction::operator>=(const Fraction &other) const {
     if (denominator == other.getDenominator()) {
         if (numerator >= other.getNumerator()) return true;
     }
-    int LCM = lcm(other);
-    int new_num1 = numerator * (LCM / denominator);
-    int new_num2 = other.getNumerator() * (LCM / other.getDenominator());
+    // int LCM = lcm(other);
+    // int new_num1 = numerator * (LCM / denominator);
+    // int new_num2 = other.getNumerator() * (LCM / other.getDenominator());
+    // return new_num1 >= new_num2;
+
+    int new_num1 = numerator * other.getDenominator();
+    int new_num2 = other.getNumerator() * denominator;
+
     return new_num1 >= new_num2;
 }
 
@@ -141,9 +206,14 @@ bool Fraction::operator<=(const Fraction &other) const {
     if (denominator == other.getDenominator()) {
         if (numerator <= other.getNumerator()) return true;
     }
-    int LCM = lcm(other);
-    int new_num1 = numerator * (LCM / denominator);
-    int new_num2 = other.getNumerator() * (LCM / other.getDenominator());
+    // int LCM = lcm(other);
+    // int new_num1 = numerator * (LCM / denominator);
+    // int new_num2 = other.getNumerator() * (LCM / other.getDenominator());
+    // return new_num1 <= new_num2;
+
+    int new_num1 = numerator * other.getDenominator();
+    int new_num2 = other.getNumerator() * denominator;
+
     return new_num1 <= new_num2;
 }
 
@@ -206,13 +276,13 @@ Fraction Fraction::operator+(float other) const {
 }
 
 Fraction Fraction::operator-(float other) const {
-    Fraction f = floatToFraction(other) - (*this);
+    Fraction f = (*this) - floatToFraction(other);
     return f;
 }
 
 Fraction Fraction::operator/(float other) const {
-    if (other == 0) throw invalid_argument("0");
-    Fraction f = floatToFraction(other) / (*this);
+    if (other == 0) throw runtime_error("Division by 0 is not defined.");
+    Fraction f = (*this) / floatToFraction(other);
     return f;
 }
 
