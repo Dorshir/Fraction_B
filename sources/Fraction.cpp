@@ -25,6 +25,17 @@ Fraction::Fraction(int n, int d) {
     denominator = d / gcd;
 }
 
+Fraction::Fraction(const float f){
+    Fraction temp = floatToFraction(f);
+    numerator = temp.getNumerator();
+    denominator = temp.getDenominator();
+}
+
+Fraction::Fraction(){
+    numerator = 0;
+    denominator = 1;
+}
+
 int Fraction::getNumerator() const {
     return numerator;
 }

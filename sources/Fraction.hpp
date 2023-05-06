@@ -15,6 +15,10 @@ class Fraction {
 
 private:
 
+    Fraction();
+
+    Fraction(const float f);
+
     int numerator;
     int denominator;
 
